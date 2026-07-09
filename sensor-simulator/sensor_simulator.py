@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
 
-MQTT_HOST = "localhost"
+MQTT_HOST = "mosquitto"
 MQTT_PORT = 1883
 MQTT_TOPIC = "technical-room/room-1/telemetry"
 

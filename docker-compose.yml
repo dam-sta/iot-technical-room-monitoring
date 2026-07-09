@@ -7,3 +7,11 @@ services:
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: unless-stopped
+
+  sensor-simulator:
+    build:
+      context: ./sensor-simulator
+    container_name: iot-sensor-simulator
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
