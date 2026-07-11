@@ -13,3 +13,13 @@ services:
       - mosquitto
     environment:
       MQTT_HOST: mosquitto
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+    ports:
+      - "127.0.0.1:8000:8000"
