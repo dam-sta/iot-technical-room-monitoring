@@ -1,13 +1,13 @@
 # IoT Technical Room Monitoring
 
 A small IoT project for monitoring temperature and humidity in a technical
-room. The current version uses a Python script as a virtual sensor and sends
-measurements to a Mosquitto broker over MQTT.
+room. A Python script simulates a sensor, publishes measurements through MQTT,
+and a FastAPI backend makes the latest measurement available through HTTP.
 
 ## Architecture
 
 ```text
-Python Sensor Simulator  -- MQTT -->  Mosquitto Broker
+Sensor Simulator --MQTT--> Mosquitto Broker --MQTT--> FastAPI Backend <--HTTP--> Browser
 ```
 
 The simulator can later be replaced with a physical device without changing
@@ -18,6 +18,7 @@ the MQTT message format.
 - Python 3.12
 - Paho MQTT
 - Eclipse Mosquitto
+- FastAPI
 - Docker Compose
 
 ## Running the project
@@ -36,6 +37,18 @@ In another terminal, subscribe to the project topics:
 ```bash
 docker compose exec mosquitto \
   mosquitto_sub -h localhost -t 'technical-room/#' -v
+```
+
+The latest measurement is available at:
+
+```text
+http://localhost:8000/measurements/latest
+```
+
+FastAPI documentation is available at:
+
+```text
+http://localhost:8000/docs
 ```
 
 Stop and remove the containers:
@@ -67,6 +80,5 @@ Example payload:
 
 ## Roadmap
 
-- Receive MQTT messages in a FastAPI backend
 - Store measurements in PostgreSQL
 - Display current and historical data in a React dashboard
