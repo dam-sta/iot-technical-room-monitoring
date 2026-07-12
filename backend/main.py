@@ -126,3 +126,20 @@ def get_latest_measurement():
         return {"message": "No measurement received yet"}
 
     return measurement
+
+
+@app.get("/measurements")
+def get_measurements():
+    with psycopg.connect(DATABASE_URL, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, device_id, temperature_c, humidity_percent, measured_at
+                FROM measurements
+                ORDER BY measured_at DESC
+                LIMIT 50
+                """
+            )
+            measurements = cursor.fetchall()
+
+    return measurements
