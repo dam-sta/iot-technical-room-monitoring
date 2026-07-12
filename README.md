@@ -44,7 +44,8 @@ Open the dashboard:
 http://localhost:5173
 ```
 
-The dashboard reloads the data from the backend every 5 seconds.
+The dashboard reloads the data from the backend every 5 seconds and uses the
+light or dark theme selected in the operating system.
 
 In another terminal, subscribe to the project topics:
 
