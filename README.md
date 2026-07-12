@@ -49,6 +49,12 @@ The latest measurement is available at:
 http://localhost:8000/measurements/latest
 ```
 
+The 50 latest measurements are available at:
+
+```text
+http://localhost:8000/measurements
+```
+
 FastAPI documentation is available at:
 
 ```text
