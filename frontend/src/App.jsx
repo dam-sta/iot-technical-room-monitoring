@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Moon, Sun } from 'lucide-react'
 import './App.css'
 
 const API_URL = 'http://localhost:8000'
@@ -7,10 +8,33 @@ function formatDate(date) {
   return new Date(date).toLocaleString('en-GB')
 }
 
+function getInitialTheme() {
+  const savedTheme = localStorage.getItem('theme')
+
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    return savedTheme
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
 function App() {
   const [latest, setLatest] = useState(null)
   const [measurements, setMeasurements] = useState([])
   const [error, setError] = useState('')
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  function toggleTheme() {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -58,9 +82,25 @@ function App() {
           <h1>Technical room</h1>
           <p className="subtitle">Temperature and humidity measurements</p>
         </div>
-        <div className={`status ${error ? 'status-error' : ''}`}>
-          <span className="status-dot" />
-          {error || 'System online'}
+        <div className="header-actions">
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          >
+            {theme === 'dark' ? (
+              <Sun className="theme-icon" aria-hidden="true" />
+            ) : (
+              <Moon className="theme-icon" aria-hidden="true" />
+            )}
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+
+          <div className={`status ${error ? 'status-error' : ''}`}>
+            <span className="status-dot" />
+            {error || 'System online'}
+          </div>
         </div>
       </header>
 
