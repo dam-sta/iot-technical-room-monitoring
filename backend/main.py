@@ -4,14 +4,19 @@ import time
 from contextlib import asynccontextmanager
 
 import paho.mqtt.client as mqtt
+import psycopg
 from fastapi import FastAPI
+from psycopg.rows import dict_row
 
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = 1883
 MQTT_TOPIC = "technical-room/room-1/telemetry"
 
-latest_measurement: dict | None = None
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://iot_user:iot_password@localhost:5432/iot_monitoring",
+)
 
 
 def on_connect(client, userdata, flags, reason_code, properties) -> None:
@@ -23,10 +28,9 @@ def on_connect(client, userdata, flags, reason_code, properties) -> None:
 
 
 def on_message(client, userdata, message) -> None:
-    global latest_measurement
-
-    latest_measurement = json.loads(message.payload.decode())
-    print(f"Received measurement: {latest_measurement}")
+    measurement = json.loads(message.payload.decode())
+    save_measurement(measurement)
+    print(f"Saved measurement: {measurement}")
 
 
 def connect_to_broker(client: mqtt.Client) -> None:
@@ -39,8 +43,55 @@ def connect_to_broker(client: mqtt.Client) -> None:
             time.sleep(2)
 
 
+def create_measurements_table() -> None:
+    while True:
+        try:
+            with psycopg.connect(DATABASE_URL) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS measurements (
+                            id SERIAL PRIMARY KEY,
+                            device_id TEXT NOT NULL,
+                            temperature_c DOUBLE PRECISION NOT NULL,
+                            humidity_percent DOUBLE PRECISION NOT NULL,
+                            measured_at TIMESTAMPTZ NOT NULL
+                        )
+                        """
+                    )
+            print("Connected to PostgreSQL")
+            return
+        except psycopg.OperationalError as error:
+            print(f"Database is not ready ({error}). Trying again in 2 seconds...")
+            time.sleep(2)
+
+
+def save_measurement(measurement: dict) -> None:
+    with psycopg.connect(DATABASE_URL) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO measurements (
+                    device_id,
+                    temperature_c,
+                    humidity_percent,
+                    measured_at
+                )
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    measurement["device_id"],
+                    measurement["temperature_c"],
+                    measurement["humidity_percent"],
+                    measurement["measured_at"],
+                ),
+            )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    create_measurements_table()
+
     mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
@@ -59,7 +110,19 @@ app = FastAPI(title="Technical Room Monitoring API", lifespan=lifespan)
 
 @app.get("/measurements/latest")
 def get_latest_measurement():
-    if latest_measurement is None:
+    with psycopg.connect(DATABASE_URL, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, device_id, temperature_c, humidity_percent, measured_at
+                FROM measurements
+                ORDER BY measured_at DESC
+                LIMIT 1
+                """
+            )
+            measurement = cursor.fetchone()
+
+    if measurement is None:
         return {"message": "No measurement received yet"}
 
-    return latest_measurement
+    return measurement
