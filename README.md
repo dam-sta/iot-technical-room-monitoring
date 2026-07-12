@@ -2,14 +2,14 @@
 
 A small IoT project for monitoring temperature and humidity in a technical
 room. A Python script simulates a sensor, publishes measurements through MQTT,
-and a FastAPI backend stores them in PostgreSQL and makes the latest
-measurement available through HTTP.
+and a FastAPI backend stores them in PostgreSQL. A React dashboard displays
+the current values and measurement history.
 
 ## Architecture
 
 ```text
 Telemetry: Sensor Simulator --MQTT--> Mosquitto --MQTT--> FastAPI --SQL--> PostgreSQL
-API:       Browser <--HTTP--> FastAPI
+Dashboard: Browser (React) --HTTP--> FastAPI
 ```
 
 The simulator can later be replaced with a physical device without changing
@@ -23,6 +23,8 @@ the MQTT message format.
 - FastAPI
 - PostgreSQL
 - Psycopg
+- React
+- Vite
 - Docker Compose
 
 ## Running the project
@@ -35,6 +37,16 @@ Start the containers:
 ```bash
 docker compose up --build
 ```
+
+Open the dashboard:
+
+```text
+http://localhost:5173
+```
+
+The dashboard reloads the data from the backend every 5 seconds. On the first
+visit it uses the system color theme, and then remembers a manually selected
+light or dark mode.
 
 In another terminal, subscribe to the project topics:
 
@@ -94,7 +106,3 @@ Example payload:
   "measured_at": "2026-07-10T18:30:00+00:00"
 }
 ```
-
-## Roadmap
-
-- Display current and historical data in a React dashboard
