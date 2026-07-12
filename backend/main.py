@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 import paho.mqtt.client as mqtt
 import psycopg
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
 
 
@@ -106,6 +107,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Technical Room Monitoring API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/measurements/latest")
