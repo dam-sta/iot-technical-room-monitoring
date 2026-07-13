@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import './App.css'
+import MeasurementChart from './MeasurementChart.jsx'
 
 const API_URL = 'http://localhost:8000'
 
@@ -127,6 +128,8 @@ function App() {
           <small>{latest?.device_id || 'No sensor data yet'}</small>
         </article>
       </section>
+
+      <MeasurementChart measurements={measurements} />
 
       <section className="history">
         <div className="section-heading">

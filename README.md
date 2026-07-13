@@ -25,6 +25,7 @@ the MQTT message format.
 - Psycopg
 - React
 - Vite
+- Recharts
 - Docker Compose
 
 ## Running the project
@@ -44,9 +45,10 @@ Open the dashboard:
 http://localhost:5173
 ```
 
-The dashboard reloads the data from the backend every 5 seconds. On the first
-visit it uses the system color theme, and then remembers a manually selected
-light or dark mode.
+The dashboard shows current values, a chart, and the 50 latest measurements.
+It reloads data from the backend every 5 seconds. On the first visit it uses
+the system color theme, and then remembers a manually selected light or dark
+mode.
 
 In another terminal, subscribe to the project topics:
 
