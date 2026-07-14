@@ -46,6 +46,7 @@ h1 {
   gap: 10px;
 }
 
+.language-toggle,
 .theme-toggle {
   display: flex;
   align-items: center;
@@ -65,16 +66,22 @@ h1 {
   cursor: pointer;
 }
 
-.theme-icon {
+.language-toggle {
+  width: 72px;
+}
+
+.toggle-icon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
 }
 
+.language-toggle:hover,
 .theme-toggle:hover {
   background: var(--table-heading-background);
 }
 
+.language-toggle:focus-visible,
 .theme-toggle:focus-visible {
   outline: 2px solid var(--eyebrow);
   outline-offset: 2px;

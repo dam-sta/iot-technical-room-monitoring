@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Moon, Sun } from 'lucide-react'
+import { Languages, Moon, Sun } from 'lucide-react'
 import './App.css'
 import MeasurementChart from './MeasurementChart.jsx'
+import translations from './translations.js'
 
 const API_URL = 'http://localhost:8000'
 
-function formatDate(date) {
-  return new Date(date).toLocaleString('en-GB')
+function formatDate(date, locale) {
+  return new Date(date).toLocaleString(locale)
 }
 
 function getInitialTheme() {
@@ -21,20 +22,43 @@ function getInitialTheme() {
     : 'light'
 }
 
+function getInitialLanguage() {
+  const savedLanguage = localStorage.getItem('language')
+
+  if (savedLanguage === 'en' || savedLanguage === 'pl') {
+    return savedLanguage
+  }
+
+  return navigator.language.toLowerCase().startsWith('pl') ? 'pl' : 'en'
+}
+
 function App() {
   const [latest, setLatest] = useState(null)
   const [measurements, setMeasurements] = useState([])
-  const [error, setError] = useState('')
+  const [hasError, setHasError] = useState(false)
   const [theme, setTheme] = useState(getInitialTheme)
+  const [language, setLanguage] = useState(getInitialLanguage)
+  const text = translations[language]
+  const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
   }, [theme])
 
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
+
   function toggleTheme() {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
+  }
+
+  function toggleLanguage() {
+    const newLanguage = language === 'en' ? 'pl' : 'en'
+    setLanguage(newLanguage)
+    localStorage.setItem('language', newLanguage)
   }
 
   useEffect(() => {
@@ -57,11 +81,11 @@ function App() {
         if (isMounted) {
           setLatest(latestData.temperature_c !== undefined ? latestData : null)
           setMeasurements(historyData)
-          setError('')
+          setHasError(false)
         }
       } catch {
         if (isMounted) {
-          setError('Cannot connect to the backend')
+          setHasError(true)
         }
       }
     }
@@ -79,35 +103,47 @@ function App() {
     <main className="dashboard">
       <header className="header">
         <div>
-          <p className="eyebrow">IoT monitoring</p>
-          <h1>Technical room</h1>
-          <p className="subtitle">Temperature and humidity measurements</p>
+          <p className="eyebrow">{text.eyebrow}</p>
+          <h1>{text.title}</h1>
+          <p className="subtitle">{text.subtitle}</p>
         </div>
         <div className="header-actions">
+          <button
+            className="language-toggle"
+            type="button"
+            onClick={toggleLanguage}
+            aria-label={
+              language === 'en' ? text.switchToPolish : text.switchToEnglish
+            }
+          >
+            <Languages className="toggle-icon" aria-hidden="true" />
+            {language.toUpperCase()}
+          </button>
+
           <button
             className="theme-toggle"
             type="button"
             onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label={theme === 'dark' ? text.switchToLight : text.switchToDark}
           >
             {theme === 'dark' ? (
-              <Sun className="theme-icon" aria-hidden="true" />
+              <Sun className="toggle-icon" aria-hidden="true" />
             ) : (
-              <Moon className="theme-icon" aria-hidden="true" />
+              <Moon className="toggle-icon" aria-hidden="true" />
             )}
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            {theme === 'dark' ? text.lightMode : text.darkMode}
           </button>
 
-          <div className={`status ${error ? 'status-error' : ''}`}>
+          <div className={`status ${hasError ? 'status-error' : ''}`}>
             <span className="status-dot" />
-            {error || 'System online'}
+            {hasError ? text.backendOffline : text.systemOnline}
           </div>
         </div>
       </header>
 
       <section className="measurement-grid">
         <article className="measurement-card temperature-card">
-          <p>Temperature</p>
+          <p>{text.temperature}</p>
           <strong>
             {latest ? latest.temperature_c.toFixed(1) : '--'}
             <span>°C</span>
@@ -115,7 +151,7 @@ function App() {
         </article>
 
         <article className="measurement-card humidity-card">
-          <p>Humidity</p>
+          <p>{text.humidity}</p>
           <strong>
             {latest ? latest.humidity_percent.toFixed(1) : '--'}
             <span>%</span>
@@ -123,37 +159,39 @@ function App() {
         </article>
 
         <article className="measurement-card details-card">
-          <p>Last measurement</p>
-          <strong>{latest ? formatDate(latest.measured_at) : 'Waiting for data'}</strong>
-          <small>{latest?.device_id || 'No sensor data yet'}</small>
+          <p>{text.lastMeasurement}</p>
+          <strong>
+            {latest ? formatDate(latest.measured_at, locale) : text.waitingForData}
+          </strong>
+          <small>{latest?.device_id || text.noSensorData}</small>
         </article>
       </section>
 
-      <MeasurementChart measurements={measurements} />
+      <MeasurementChart measurements={measurements} locale={locale} text={text} />
 
       <section className="history">
         <div className="section-heading">
           <div>
-            <h2>Measurement history</h2>
-            <p>The latest 50 records from PostgreSQL</p>
+            <h2>{text.historyTitle}</h2>
+            <p>{text.historySubtitle}</p>
           </div>
-          <span>Updated every 5 seconds</span>
+          <span>{text.updatedEveryFiveSeconds}</span>
         </div>
 
         <div className="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Device</th>
-                <th>Temperature</th>
-                <th>Humidity</th>
+                <th>{text.date}</th>
+                <th>{text.device}</th>
+                <th>{text.temperature}</th>
+                <th>{text.humidity}</th>
               </tr>
             </thead>
             <tbody>
               {measurements.map((measurement) => (
                 <tr key={measurement.id}>
-                  <td>{formatDate(measurement.measured_at)}</td>
+                  <td>{formatDate(measurement.measured_at, locale)}</td>
                   <td>{measurement.device_id}</td>
                   <td>{measurement.temperature_c.toFixed(1)} °C</td>
                   <td>{measurement.humidity_percent.toFixed(1)} %</td>
@@ -163,7 +201,7 @@ function App() {
           </table>
 
           {measurements.length === 0 && (
-            <p className="empty-message">Waiting for the first measurement...</p>
+            <p className="empty-message">{text.waitingForFirstMeasurement}</p>
           )}
         </div>
       </section>

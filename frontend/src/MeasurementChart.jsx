@@ -9,29 +9,29 @@ import {
   YAxis,
 } from 'recharts'
 
-function formatTime(date) {
-  return new Date(date).toLocaleTimeString('en-GB', {
+function formatTime(date, locale) {
+  return new Date(date).toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   })
 }
 
-function formatDate(date) {
-  return new Date(date).toLocaleString('en-GB')
+function formatDate(date, locale) {
+  return new Date(date).toLocaleString(locale)
 }
 
-function MeasurementChart({ measurements }) {
+function MeasurementChart({ measurements, locale, text }) {
   const chartData = [...measurements].reverse()
 
   return (
     <section className="chart-panel">
       <div className="section-heading">
         <div>
-          <h2>Measurement chart</h2>
-          <p>Temperature and humidity over time</p>
+          <h2>{text.chartTitle}</h2>
+          <p>{text.chartSubtitle}</p>
         </div>
-        <span>Oldest to newest</span>
+        <span>{text.oldestToNewest}</span>
       </div>
 
       {chartData.length > 0 ? (
@@ -44,7 +44,7 @@ function MeasurementChart({ measurements }) {
               <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
               <XAxis
                 dataKey="measured_at"
-                tickFormatter={formatTime}
+                tickFormatter={(date) => formatTime(date, locale)}
                 minTickGap={35}
                 stroke="var(--text-secondary)"
                 tick={{ fontSize: 12 }}
@@ -67,7 +67,7 @@ function MeasurementChart({ measurements }) {
                 width={45}
               />
               <Tooltip
-                labelFormatter={formatDate}
+                labelFormatter={(date) => formatDate(date, locale)}
                 contentStyle={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -80,7 +80,7 @@ function MeasurementChart({ measurements }) {
                 yAxisId="temperature"
                 type="monotone"
                 dataKey="temperature_c"
-                name="Temperature"
+                name={text.temperature}
                 unit=" °C"
                 stroke="var(--temperature)"
                 strokeWidth={2}
@@ -91,7 +91,7 @@ function MeasurementChart({ measurements }) {
                 yAxisId="humidity"
                 type="monotone"
                 dataKey="humidity_percent"
-                name="Humidity"
+                name={text.humidity}
                 unit=" %"
                 stroke="var(--humidity)"
                 strokeWidth={2}
@@ -102,7 +102,7 @@ function MeasurementChart({ measurements }) {
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className="empty-message">Waiting for the first measurement...</p>
+        <p className="empty-message">{text.waitingForFirstMeasurement}</p>
       )}
     </section>
   )
