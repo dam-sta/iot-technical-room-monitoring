@@ -51,6 +51,10 @@ the system color theme. It selects Polish when the browser language is Polish,
 and English otherwise. It then remembers the manually selected theme and
 language.
 
+The sensor is shown as online when its latest measurement is no more than 15
+seconds old. Older data changes the status to sensor offline. If the API cannot
+be reached, the dashboard shows backend offline instead.
+
 In another terminal, subscribe to the project topics:
 
 ```bash
