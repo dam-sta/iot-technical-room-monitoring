@@ -117,6 +117,16 @@ h1 {
   background: var(--error-dot);
 }
 
+.status-checking {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+.status-checking .status-dot {
+  background: var(--text-secondary);
+}
+
 .measurement-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

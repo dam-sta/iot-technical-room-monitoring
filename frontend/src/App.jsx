@@ -5,9 +5,19 @@ import MeasurementChart from './MeasurementChart.jsx'
 import translations from './translations.js'
 
 const API_URL = 'http://localhost:8000'
+const SENSOR_OFFLINE_AFTER_MS = 15_000
 
 function formatDate(date, locale) {
   return new Date(date).toLocaleString(locale)
+}
+
+function isSensorOnline(measurement) {
+  if (!measurement) {
+    return false
+  }
+
+  const measurementTime = new Date(measurement.measured_at).getTime()
+  return Date.now() - measurementTime <= SENSOR_OFFLINE_AFTER_MS
 }
 
 function getInitialTheme() {
@@ -36,10 +46,25 @@ function App() {
   const [latest, setLatest] = useState(null)
   const [measurements, setMeasurements] = useState([])
   const [hasError, setHasError] = useState(false)
+  const [isCheckingConnection, setIsCheckingConnection] = useState(true)
   const [theme, setTheme] = useState(getInitialTheme)
   const [language, setLanguage] = useState(getInitialLanguage)
   const text = translations[language]
   const locale = language === 'pl' ? 'pl-PL' : 'en-GB'
+  const sensorOnline = isSensorOnline(latest)
+  let statusText = text.checkingConnection
+  let statusClass = 'status-checking'
+
+  if (!isCheckingConnection) {
+    statusText = text.sensorOffline
+    statusClass = hasError || !sensorOnline ? 'status-error' : ''
+
+    if (hasError) {
+      statusText = text.backendOffline
+    } else if (sensorOnline) {
+      statusText = text.sensorOnline
+    }
+  }
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -82,10 +107,12 @@ function App() {
           setLatest(latestData.temperature_c !== undefined ? latestData : null)
           setMeasurements(historyData)
           setHasError(false)
+          setIsCheckingConnection(false)
         }
       } catch {
         if (isMounted) {
           setHasError(true)
+          setIsCheckingConnection(false)
         }
       }
     }
@@ -134,9 +161,9 @@ function App() {
             {theme === 'dark' ? text.lightMode : text.darkMode}
           </button>
 
-          <div className={`status ${hasError ? 'status-error' : ''}`}>
+          <div className={`status ${statusClass}`}>
             <span className="status-dot" />
-            {hasError ? text.backendOffline : text.systemOnline}
+            {statusText}
           </div>
         </div>
       </header>
